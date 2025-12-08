@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fixed Background Support for better browser compatibility */
+@layer utilities {
+  .bg-fixed {
+    background-attachment: fixed;
+  }
+  
+  /* Fallback for mobile devices */
+  @media (max-width: 768px) {
+    .bg-fixed {
+      background-attachment: scroll;
+    }
+  }
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-dark-bg text-gray-100 antialiased;
+  }
+  
+  * {
+    @apply border-dark-border;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+

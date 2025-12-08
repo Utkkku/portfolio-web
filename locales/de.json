@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "about": "Über mich",
+    "skills": "Fähigkeiten",
+    "projects": "Projekte",
+    "certifications": "Zertifikate",
+    "contact": "Kontakt"
+  },
+  "hero": {
+    "greeting": "Hallo, mein Name ist",
+    "name": "Utku",
+    "roles": {
+      "fullStack": "Full Stack Entwickler",
+      "react": "React Spezialist",
+      "nextjs": "Next.js Experte",
+      "typescript": "TypeScript Entwickler",
+      "uiux": "UI/UX Enthusiast"
+    },
+    "description": "Ich entwickle benutzerorientierte, leistungsstarke und skalierbare Softwarelösungen mit modernen Webtechnologien.",
+    "cta": {
+      "projects": "Meine Projekte ansehen",
+      "contact": "Kontakt aufnehmen"
+    }
+  },
+  "stats": {
+    "title": "Meine Statistiken",
+    "completedProjects": "Abgeschlossene Projekte",
+    "happyClients": "Zufriedene Kunden",
+    "yearsExperience": "Jahre Erfahrung",
+    "codeQuality": "Code-Qualität"
+  },
+  "skills": {
+    "title": "Meine Fähigkeiten",
+    "subtitle": "Ich entwickle professionelle Lösungen mit modernen Technologien und Tools"
+  },
+  "projects": {
+    "title": "Meine Projekte",
+    "subtitle": "Ausgewählte Projekte, die ich mit modernen Technologien entwickelt habe",
+    "featured": "Ausgewählte Projekte",
+    "other": "Weitere Projekte",
+    "liveDemo": "Live Demo",
+    "github": "GitHub",
+    "noProjects": "Es wurden noch keine Projekte hochgeladen."
+  },
+  "certifications": {
+    "title": "Meine Zertifikate",
+    "subtitle": "Zertifikate und Erfolge für meine berufliche Entwicklung",
+    "verify": "Verifizieren",
+    "noCertificates": "Es wurden noch keine Zertifikate hochgeladen."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "subtitle": "Kontaktieren Sie mich für Ihre Projekte. Sie können mich sofort über WhatsApp oder Telefon erreichen.",
+    "whatsapp": "Kontakt über WhatsApp",
+    "phone": "Anrufen"
+  },
+  "footer": {
+    "copyright": "Alle Rechte vorbehalten.",
+    "year": "2024"
+  }
+}
+

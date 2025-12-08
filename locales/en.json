@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "about": "About",
+    "skills": "Skills",
+    "projects": "Projects",
+    "certifications": "Certifications",
+    "contact": "Contact"
+  },
+  "hero": {
+    "greeting": "Hello, my name is",
+    "name": "Utku",
+    "roles": {
+      "fullStack": "Full Stack Developer",
+      "react": "React Specialist",
+      "nextjs": "Next.js Expert",
+      "typescript": "TypeScript Developer",
+      "uiux": "UI/UX Enthusiast"
+    },
+    "description": "I develop user-focused, performant, and scalable software solutions using modern web technologies.",
+    "cta": {
+      "projects": "View My Projects",
+      "contact": "Get In Touch"
+    }
+  },
+  "stats": {
+    "title": "My Statistics",
+    "completedProjects": "Completed Projects",
+    "happyClients": "Happy Clients",
+    "yearsExperience": "Years Experience",
+    "codeQuality": "Code Quality"
+  },
+  "skills": {
+    "title": "My Skills",
+    "subtitle": "I develop professional solutions with modern technologies and tools"
+  },
+  "projects": {
+    "title": "My Projects",
+    "subtitle": "Featured projects I've developed with modern technologies",
+    "featured": "Featured Projects",
+    "other": "Other Projects",
+    "liveDemo": "Live Demo",
+    "github": "GitHub",
+    "noProjects": "No projects have been uploaded yet."
+  },
+  "certifications": {
+    "title": "My Certifications",
+    "subtitle": "Certificates and achievements for my professional development",
+    "verify": "Verify",
+    "noCertificates": "No certificates have been uploaded yet."
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Get in touch with me for your projects. You can reach me immediately via WhatsApp or phone.",
+    "whatsapp": "Contact via WhatsApp",
+    "phone": "Call via Phone"
+  },
+  "footer": {
+    "copyright": "All rights reserved.",
+    "year": "2024"
+  }
+}
+

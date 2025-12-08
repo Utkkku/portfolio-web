@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "Akıllı Tarım Sistemleri",
+    "description": "Bitki Öneri Modülü: Toprak analizine (NPK, pH, sıcaklık, nem, yağış) dayalı olarak, Random\nForest algoritmasıyla en uygun bitki türünü önerir.\nYaprak Hastalık Tespiti: PlantVillage veri seti ile eğitilmiş CNN modeli sayesinde kullanıcıların\nyüklediği yaprak görsellerinden hastalık tespiti yapar.\nTarımsal Planlama Modülü: Hava durumu verilerine göre ekim, sulama ve ilaçlama gibi\nfaaliyetlere dair öneriler sunar",
+    "technologies": [
+      "Swift",
+      "Random Forest",
+      "CNN"
+    ],
+    "image": "☘",
+    "link": "https://utkugocer.com",
+    "github": "",
+    "featured": true
+  },
+  {
+    "id": 2,
+    "title": "Şirket Tanıtım Amaçlı Web Sitesi",
+    "description": "Havalandırma sistemleri şirketi için yaptığım küçük çaplı web sitesi.",
+    "technologies": [
+      "Next.js"
+    ],
+    "image": "༄",
+    "link": "https://mesbay.com",
+    "github": "",
+    "featured": false
+  },
+  {
+    "id": 3,
+    "title": "Akıllı Mama Sistemi",
+    "description": "Evcil hayvanlar için geliştirilen bu projede, belirli saatlerde otomatik olarak mama verebilen bir\nsistem tasarladım. Arduino ile çalışarak motor yardımıyla mama bırakıyor, sensörlerle de mama\nseviyesini kontrol ediyor. Aynı zamanda kullanıcıya bilgilendirme yapılabiliyor.",
+    "technologies": [
+      "IoT"
+    ],
+    "image": "💼",
+    "link": "https://utkugocer.com",
+    "github": "",
+    "featured": false
+  },
+  {
+    "id": 4,
+    "title": "Borsa Analiz Sistemi",
+    "description": "Borsa verilerini kullanarak hisse senetleri için al-sat sinyalleri veren bir yapay zeka modeli\ngeliştirdim. Geçmiş fiyatlar ve teknik göstergeler üzerinde çalıştım. Python ile veri temizliği,\nmodel eğitimi ve test aşamalarını yaptım. Sonuçları grafiklerle gösteren basit bir arayüz de\noluşturdum",
+    "technologies": [
+      "Scikit-learn",
+      "TensorFlow"
+    ],
+    "image": "💼",
+    "link": "https://utkugocer.com",
+    "github": "",
+    "featured": false
+  },
+  {
+    "id": 5,
+    "title": "İş Bulma Sitesi",
+    "description": "Aktif olarak geliştirdiğim tekstil sektörü üzerinde büyük çaplı bir iş bulma sitesi.",
+    "technologies": [
+      "Next.js",
+      "TypeScript",
+      "SQL",
+      "API Client"
+    ],
+    "image": "💼",
+    "link": "https://utkugocer.com",
+    "github": "",
+    "featured": false
+  }
+]

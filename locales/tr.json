@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "about": "Hakkımda",
+    "skills": "Yetenekler",
+    "projects": "Projeler",
+    "certifications": "Sertifikalar",
+    "contact": "İletişim"
+  },
+  "hero": {
+    "greeting": "Merhaba, benim adım",
+    "name": "Utku",
+    "roles": {
+      "fullStack": "Full Stack Developer",
+      "react": "React Specialist",
+      "nextjs": "Next.js Expert",
+      "typescript": "TypeScript Developer",
+      "uiux": "UI/UX Enthusiast"
+    },
+    "description": "Modern web teknolojileri kullanarak kullanıcı odaklı, performanslı ve ölçeklenebilir yazılım çözümleri geliştiriyorum.",
+    "cta": {
+      "projects": "Projelerimi İncele",
+      "contact": "İletişime Geç"
+    }
+  },
+  "stats": {
+    "title": "İstatistiklerim",
+    "completedProjects": "Tamamlanan Proje",
+    "happyClients": "Mutlu Müşteri",
+    "yearsExperience": "Yıllık Deneyim",
+    "codeQuality": "Kod Kalitesi"
+  },
+  "skills": {
+    "title": "Yeteneklerim",
+    "subtitle": "Modern teknolojiler ve araçlarla profesyonel çözümler geliştiriyorum"
+  },
+  "projects": {
+    "title": "Projelerim",
+    "subtitle": "Modern teknolojilerle geliştirdiğim öne çıkan projeler",
+    "featured": "Öne Çıkan Projeler",
+    "other": "Diğer Projeler",
+    "liveDemo": "Canlı Demo",
+    "github": "GitHub",
+    "noProjects": "Henüz yüklü proje bulunmamaktadır."
+  },
+  "certifications": {
+    "title": "Sertifikalarım",
+    "subtitle": "Profesyonel gelişimim için aldığım sertifikalar ve başarılar",
+    "verify": "Doğrula",
+    "noCertificates": "Henüz yüklü sertifika bulunmamaktadır."
+  },
+  "contact": {
+    "title": "İletişim",
+    "subtitle": "Projeleriniz için benimle iletişime geçin. Hemen WhatsApp veya telefon ile ulaşabilirsiniz.",
+    "whatsapp": "WhatsApp ile İletişime Geç",
+    "phone": "Telefon ile Ara"
+  },
+  "footer": {
+    "copyright": "Tüm hakları saklıdır.",
+    "year": "2024"
+  }
+}
+
