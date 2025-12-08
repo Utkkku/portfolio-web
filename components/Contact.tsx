@@ -70,7 +70,6 @@ const contactCards: ContactCardConfig[] = [
 ]
 
 export default function Contact() {
-  const { t } = useLanguage()
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 

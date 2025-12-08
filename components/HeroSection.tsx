@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 // Only selected images: ai-generated, ai-robot, and 2149
@@ -12,19 +11,11 @@ const backgroundImages = [
   '/images/hero/2149739750.jpg',
 ]
 
-// Fallback gradients
-const fallbackGradients = [
-  'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-]
-
 export default function HeroSection() {
   const { t } = useLanguage()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [currentRole, setCurrentRole] = useState(0)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [imageErrors, setImageErrors] = useState<boolean[]>(new Array(backgroundImages.length).fill(false))
   const [isMounted, setIsMounted] = useState(false)
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -190,14 +181,6 @@ export default function HeroSection() {
     },
   }
 
-  const handleImageError = (index: number) => {
-    setImageErrors((prev) => {
-      const newErrors = [...prev]
-      newErrors[index] = true
-      return newErrors
-    })
-  }
-
   if (!isMounted) {
     return (
       <div className="relative min-h-screen flex items-center justify-center bg-dark-bg">
@@ -214,7 +197,6 @@ export default function HeroSection() {
       <div className="fixed inset-0 z-0">
         {backgroundImages.map((image, index) => {
           const isActive = index === currentImageIndex
-          const hasError = imageErrors[index] || false
           
           return (
             <motion.div
@@ -229,7 +211,7 @@ export default function HeroSection() {
                 ease: [0.25, 0.46, 0.45, 0.94], // NicePage-style smooth ease
               }}
               style={{
-                backgroundImage: !hasError ? `url(${image})` : undefined,
+                backgroundImage: `url(${image})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center center',
                 backgroundRepeat: 'no-repeat',
@@ -237,15 +219,6 @@ export default function HeroSection() {
                 willChange: 'opacity',
               }}
             >
-              {hasError && (
-                <div
-                  className="w-full h-full"
-                  style={{
-                    background: fallbackGradients[index] || fallbackGradients[0],
-                    backgroundAttachment: 'fixed',
-                  }}
-                />
-              )}
               {/* Dark overlay for better text readability */}
               <div className="absolute inset-0 bg-gradient-to-b from-dark-bg/85 via-dark-bg/70 to-dark-bg/90" />
               <div className="absolute inset-0 bg-primary/5" />

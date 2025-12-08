@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion'
 import { useInView } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
-import Image from 'next/image'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { api } from '@/lib/api'
 import type { Project } from '@/types'
@@ -111,7 +110,6 @@ export default function Projects() {
 
   // Smooth parallax values - NicePage style
   // As you scroll down, background moves up smoothly (parallax effect)
-  const backgroundY = scrollProgress * -400 + 200 // Smooth upward movement (more pronounced)
   const sectionOpacity = scrollProgress < 0.15 ? scrollProgress / 0.15 : scrollProgress > 0.85 ? (1 - scrollProgress) / 0.15 : 1
 
   return (
