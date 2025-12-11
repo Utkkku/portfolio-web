@@ -60,6 +60,8 @@ CONSOLE*.md
 BROWSER*.md
 TEST_REHBERI.md
 README_GUIDE*.md
+MANUAL_*.md
+PRODUCTION_TEST*.md
 
 # security sensitive files
 *.pem
