@@ -62,6 +62,9 @@ TEST_REHBERI.md
 README_GUIDE*.md
 MANUAL_*.md
 PRODUCTION_TEST*.md
+*_FIX*.md
+*_EXPLANATION*.md
+migrate-*.sql
 
 # security sensitive files
 *.pem
