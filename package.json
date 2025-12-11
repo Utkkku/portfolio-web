@@ -22,7 +22,8 @@
     "test:production": "playwright test e2e/production.spec.ts",
     "test:security": "npm audit --audit-level=moderate",
     "test:performance": "lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html",
-    "test:ci": "npm run test:coverage && npm run test:e2e && npm run test:security"
+    "test:ci": "npm run test:coverage && npm run test:e2e && npm run test:security",
+    "pre-push-check": "node scripts/pre-push-check.js"
   },
   "dependencies": {
     "framer-motion": "^10.16.16",
