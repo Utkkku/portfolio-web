@@ -14,6 +14,8 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Ignore SSL errors for testing (production tests only)
+    ignoreHTTPSErrors: process.env.IGNORE_SSL === 'true',
   },
 
   projects: [
