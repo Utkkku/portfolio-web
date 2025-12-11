@@ -170,6 +170,13 @@ npm run lint:fix     # Fix ESLint errors
 npm run type-check   # TypeScript type checking
 npm run format       # Format code with Prettier
 npm run format:check # Check code formatting
+npm run test         # Run unit tests
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Run tests with coverage
+npm run test:e2e     # Run E2E tests
+npm run test:all     # Run all tests
+npm run test:security # Security audit
+npm run test:performance # Performance tests
 ```
 
 ### Code Quality
@@ -186,10 +193,37 @@ npm run format:check # Check code formatting
 4. **Accessibility:** Proper ARIA labels and keyboard navigation
 5. **SEO:** Meta tags, sitemap, robots.txt
 
+## 🧪 Testing
+
+Comprehensive test suite including unit, integration, E2E, security, and performance tests.
+
+### Test Commands
+
+```bash
+# Run all tests
+npm run test:all
+
+# Unit tests
+npm run test
+npm run test:watch
+npm run test:coverage
+
+# E2E tests
+npm run test:e2e
+npm run test:e2e:ui
+npm run test:e2e:headed
+
+# Security audit
+npm run test:security
+
+# Performance (Lighthouse)
+npm run test:performance
+```
+
+See [TEST_REHBERI.md](./TEST_REHBERI.md) for detailed testing documentation.
+
 ## 🔄 Future Improvements
 
-- [ ] Add unit tests (Jest + React Testing Library)
-- [ ] Add E2E tests (Playwright)
 - [ ] Implement caching strategy
 - [ ] Add analytics
 - [ ] Implement dark/light theme toggle
