@@ -5,8 +5,6 @@
 /.pnp
 .pnp.js
 
-# testing
-/coverage
 
 # next.js
 /.next/
@@ -38,12 +36,6 @@ yarn-error.log*
 .env.local
 .env*.local
 
-# testing
-coverage/
-.nyc_output/
-playwright-report/
-test-results/
-lighthouse-report.html
 
 # documentation and guides (do not push to git)
 *_REHBERI.md

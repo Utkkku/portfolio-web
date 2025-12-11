@@ -11,18 +11,6 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,css,md}\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:production": "playwright test e2e/production.spec.ts",
-    "test:all": "npm run test && npm run test:e2e",
-    "test:production": "playwright test e2e/production.spec.ts",
-    "test:security": "npm audit --audit-level=moderate",
-    "test:performance": "lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html",
-    "test:ci": "npm run test:coverage && npm run test:e2e && npm run test:security",
     "pre-push-check": "node scripts/pre-push-check.js"
   },
   "dependencies": {
@@ -33,19 +21,11 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.1",
-    "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^14.1.2",
-    "@testing-library/user-event": "^14.5.1",
-    "@types/jest": "^29.5.11",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
     "eslint": "^9.39.1",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "lighthouse": "^11.4.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3"
