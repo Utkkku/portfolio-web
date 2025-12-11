@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { adminAuth } from '../admin/middleware'
-import { supabase, ProjectRow } from '@/lib/supabase'
+import { supabase, supabaseAdmin, ProjectRow } from '@/lib/supabase'
 
 const PROJECTS_FILE = join(process.cwd(), 'data', 'projects.json')
 
@@ -68,7 +68,10 @@ async function readProjects() {
 }
 
 async function writeProjects(projects: any[]) {
-  if (supabase) {
+  // Use admin client for write operations (bypasses RLS)
+  const writeClient = supabaseAdmin || supabase
+  
+  if (writeClient) {
     try {
       const rows: ProjectRow[] = projects.map(project => ({
         id: project.id,
@@ -83,8 +86,8 @@ async function writeProjects(projects: any[]) {
         featured: project.featured || false,
       }))
 
-      await supabase.from('projects').delete().neq('id', 0)
-      const { error } = await supabase.from('projects').insert(rows)
+      await writeClient.from('projects').delete().neq('id', 0)
+      const { error } = await writeClient.from('projects').insert(rows)
 
       if (error) {
         console.error('Supabase write error:', error)
@@ -251,8 +254,10 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id') || '0')
 
-    if (supabase) {
-      const { error } = await supabase
+    const writeClient = supabaseAdmin || supabase
+    
+    if (writeClient) {
+      const { error } = await writeClient
         .from('projects')
         .delete()
         .eq('id', id)

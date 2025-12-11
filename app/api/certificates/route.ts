@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { adminAuth } from '../admin/middleware'
-import { supabase, CertificateRow } from '@/lib/supabase'
+import { supabase, supabaseAdmin, CertificateRow } from '@/lib/supabase'
 
 const CERTIFICATES_FILE = join(process.cwd(), 'data', 'certificates.json')
 
@@ -68,7 +68,10 @@ async function readCertificates() {
 }
 
 async function writeCertificates(certificates: any[]) {
-  if (supabase) {
+  // Use admin client for write operations (bypasses RLS)
+  const writeClient = supabaseAdmin || supabase
+  
+  if (writeClient) {
     try {
       // Convert app format to database rows
       const rows: CertificateRow[] = certificates.map(cert => ({
@@ -81,10 +84,10 @@ async function writeCertificates(certificates: any[]) {
       }))
 
       // Delete all existing records
-      await supabase.from('certificates').delete().neq('id', 0)
+      await writeClient.from('certificates').delete().neq('id', 0)
 
       // Insert all records
-      const { error } = await supabase.from('certificates').insert(rows)
+      const { error } = await writeClient.from('certificates').insert(rows)
 
       if (error) {
         console.error('Supabase write error:', error)
@@ -244,9 +247,11 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id') || '0')
 
-    if (supabase) {
-      // Use Supabase
-      const { error } = await supabase
+    const writeClient = supabaseAdmin || supabase
+    
+    if (writeClient) {
+      // Use Supabase (prefer admin client for write operations)
+      const { error } = await writeClient
         .from('certificates')
         .delete()
         .eq('id', id)
