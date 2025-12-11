@@ -73,3 +73,6 @@ secrets/
 .env.production
 .env.development
 
+# Supabase files (do not commit)
+supabase-schema.sql
+

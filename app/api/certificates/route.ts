@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { adminAuth } from '../admin/middleware'
+import { supabase, CertificateRow } from '@/lib/supabase'
 
 const CERTIFICATES_FILE = join(process.cwd(), 'data', 'certificates.json')
 
-function readCertificates() {
+// Fallback: File system functions (for development or when Supabase not configured)
+function readCertificatesFromFile() {
   try {
     if (!existsSync(CERTIFICATES_FILE)) {
       return []
@@ -17,18 +19,93 @@ function readCertificates() {
   }
 }
 
-function writeCertificates(data: any[]) {
-  const dir = join(process.cwd(), 'data')
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true })
+function writeCertificatesToFile(data: any[]) {
+  try {
+    const dir = join(process.cwd(), 'data')
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true })
+    }
+    writeFileSync(CERTIFICATES_FILE, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch (error) {
+    console.error('File write error:', error)
+    return false
   }
-  writeFileSync(CERTIFICATES_FILE, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// Database functions
+async function readCertificates() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('certificates')
+        .select('*')
+        .order('id', { ascending: true })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        // Fallback to file system
+        return readCertificatesFromFile()
+      }
+
+      // Convert database rows to app format
+      return (data || []).map((row: CertificateRow) => ({
+        id: row.id,
+        name: row.name,
+        issuer: row.issuer,
+        date: row.date,
+        verifyUrl: row.verify_url || '',
+        image: row.image || '/certificates/placeholder.jpg',
+      }))
+    } catch (error) {
+      console.error('Error reading from Supabase:', error)
+      return readCertificatesFromFile()
+    }
+  }
+  
+  // No Supabase, use file system
+  return readCertificatesFromFile()
+}
+
+async function writeCertificates(certificates: any[]) {
+  if (supabase) {
+    try {
+      // Convert app format to database rows
+      const rows: CertificateRow[] = certificates.map(cert => ({
+        id: cert.id,
+        name: cert.name,
+        issuer: cert.issuer,
+        date: cert.date,
+        verify_url: cert.verifyUrl || '',
+        image: cert.image || '/certificates/placeholder.jpg',
+      }))
+
+      // Delete all existing records
+      await supabase.from('certificates').delete().neq('id', 0)
+
+      // Insert all records
+      const { error } = await supabase.from('certificates').insert(rows)
+
+      if (error) {
+        console.error('Supabase write error:', error)
+        throw error
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error writing to Supabase:', error)
+      throw error
+    }
+  }
+
+  // No Supabase, try file system (will fail on Netlify)
+  return writeCertificatesToFile(certificates)
 }
 
 // GET - Tüm sertifikaları getir
 export async function GET() {
   try {
-    const certificates = readCertificates()
+    const certificates = await readCertificates()
     return NextResponse.json(certificates)
   } catch (error) {
     return NextResponse.json(
@@ -46,7 +123,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    
+
     // Validation
     if (!body.name || !body.issuer || !body.date) {
       return NextResponse.json(
@@ -54,8 +131,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
-    const certificates = readCertificates()
+
+    const certificates = await readCertificates()
 
     // Yeni ID oluştur
     const newId = certificates.length > 0
@@ -72,16 +149,17 @@ export async function POST(request: NextRequest) {
     }
 
     certificates.push(newCertificate)
-    
+
     try {
-      writeCertificates(certificates)
+      await writeCertificates(certificates)
     } catch (writeError) {
-      console.error('File write error:', writeError)
-      // Netlify'da file system write sorunları olabilir
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı. Lütfen Supabase yapılandırmasını kontrol edin.'
+            : 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -92,9 +170,9 @@ export async function POST(request: NextRequest) {
     console.error('POST /api/certificates error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Sertifika eklenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -109,7 +187,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const certificates = readCertificates()
+    const certificates = await readCertificates()
 
     const index = certificates.findIndex((c: any) => c.id === body.id)
     if (index === -1) {
@@ -124,18 +202,20 @@ export async function PUT(request: NextRequest) {
       name: body.name,
       issuer: body.issuer,
       date: body.date,
-      verifyUrl: body.verifyUrl,
+      verifyUrl: body.verifyUrl || '',
       image: body.image || certificates[index].image,
     }
 
     try {
-      writeCertificates(certificates)
+      await writeCertificates(certificates)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı.'
+            : 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -145,9 +225,9 @@ export async function PUT(request: NextRequest) {
     console.error('PUT /api/certificates error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Sertifika güncellenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -164,7 +244,26 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id') || '0')
 
-    const certificates = readCertificates()
+    if (supabase) {
+      // Use Supabase
+      const { error } = await supabase
+        .from('certificates')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Supabase delete error:', error)
+        return NextResponse.json(
+          { error: 'Sertifika silinemedi' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // Fallback: File system
+    const certificates = await readCertificates()
     const filtered = certificates.filter((c: any) => c.id !== id)
 
     if (certificates.length === filtered.length) {
@@ -175,13 +274,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-      writeCertificates(filtered)
+      await writeCertificates(filtered)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -191,12 +290,11 @@ export async function DELETE(request: NextRequest) {
     console.error('DELETE /api/certificates error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Sertifika silinemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
   }
 }
-

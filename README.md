@@ -116,10 +116,34 @@ npm start
 Create `.env.local` file:
 
 ```env
+# Admin Authentication
 ADMIN_PASSWORD=your-secure-password
 ADMIN_TOKEN=your-secure-token
+
+# Site Configuration
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
+
+# Supabase Database (Required for Netlify deployment)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
+
+#### Supabase Setup (Required for Production)
+
+1. **Create a Supabase account** at [supabase.com](https://supabase.com)
+2. **Create a new project**
+3. **Run the SQL schema:**
+   - Go to SQL Editor in Supabase dashboard
+   - Copy and run the contents of `supabase-schema.sql`
+4. **Get your credentials:**
+   - Go to Settings → API
+   - Copy `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - Copy `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. **Add to Netlify:**
+   - Go to Netlify Dashboard → Site Settings → Environment Variables
+   - Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+**Note:** Without Supabase configuration, file write operations will fail on Netlify because serverless functions cannot write to the file system.
 
 ## 📁 Project Structure
 

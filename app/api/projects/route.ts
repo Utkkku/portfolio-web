@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { adminAuth } from '../admin/middleware'
+import { supabase, ProjectRow } from '@/lib/supabase'
 
 const PROJECTS_FILE = join(process.cwd(), 'data', 'projects.json')
 
-function readProjects() {
+// Fallback: File system functions
+function readProjectsFromFile() {
   try {
     if (!existsSync(PROJECTS_FILE)) {
       return []
@@ -17,18 +19,92 @@ function readProjects() {
   }
 }
 
-function writeProjects(data: any[]) {
-  const dir = join(process.cwd(), 'data')
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true })
+function writeProjectsToFile(data: any[]) {
+  try {
+    const dir = join(process.cwd(), 'data')
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true })
+    }
+    writeFileSync(PROJECTS_FILE, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch (error) {
+    console.error('File write error:', error)
+    return false
   }
-  writeFileSync(PROJECTS_FILE, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// Database functions
+async function readProjects() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('id', { ascending: true })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        return readProjectsFromFile()
+      }
+
+      // Convert database rows to app format
+      return (data || []).map((row: ProjectRow) => ({
+        id: row.id,
+        title: row.title,
+        description: row.description,
+        technologies: row.technologies || [],
+        image: row.image || '💼',
+        link: row.link || '#',
+        github: row.github || '',
+        featured: row.featured || false,
+      }))
+    } catch (error) {
+      console.error('Error reading from Supabase:', error)
+      return readProjectsFromFile()
+    }
+  }
+
+  return readProjectsFromFile()
+}
+
+async function writeProjects(projects: any[]) {
+  if (supabase) {
+    try {
+      const rows: ProjectRow[] = projects.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        technologies: Array.isArray(project.technologies)
+          ? project.technologies
+          : [],
+        image: project.image || '💼',
+        link: project.link || '#',
+        github: project.github || '',
+        featured: project.featured || false,
+      }))
+
+      await supabase.from('projects').delete().neq('id', 0)
+      const { error } = await supabase.from('projects').insert(rows)
+
+      if (error) {
+        console.error('Supabase write error:', error)
+        throw error
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error writing to Supabase:', error)
+      throw error
+    }
+  }
+
+  return writeProjectsToFile(projects)
 }
 
 // GET - Tüm projeleri getir
 export async function GET() {
   try {
-    const projects = readProjects()
+    const projects = await readProjects()
     return NextResponse.json(projects)
   } catch (error) {
     return NextResponse.json(
@@ -46,7 +122,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    
+
     // Validation
     if (!body.title || !body.description) {
       return NextResponse.json(
@@ -54,8 +130,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    
-    const projects = readProjects()
+
+    const projects = await readProjects()
 
     // Yeni ID oluştur
     const newId = projects.length > 0
@@ -76,15 +152,17 @@ export async function POST(request: NextRequest) {
     }
 
     projects.push(newProject)
-    
+
     try {
-      writeProjects(projects)
+      await writeProjects(projects)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı. Lütfen Supabase yapılandırmasını kontrol edin.'
+            : 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -95,9 +173,9 @@ export async function POST(request: NextRequest) {
     console.error('POST /api/projects error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Proje eklenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -112,7 +190,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const projects = readProjects()
+    const projects = await readProjects()
 
     const index = projects.findIndex((p: any) => p.id === body.id)
     if (index === -1) {
@@ -136,13 +214,15 @@ export async function PUT(request: NextRequest) {
     }
 
     try {
-      writeProjects(projects)
+      await writeProjects(projects)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı.'
+            : 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -152,9 +232,9 @@ export async function PUT(request: NextRequest) {
     console.error('PUT /api/projects error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Proje güncellenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -171,7 +251,25 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id') || '0')
 
-    const projects = readProjects()
+    if (supabase) {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Supabase delete error:', error)
+        return NextResponse.json(
+          { error: 'Proje silinemedi' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // Fallback: File system
+    const projects = await readProjects()
     const filtered = projects.filter((p: any) => p.id !== id)
 
     if (projects.length === filtered.length) {
@@ -182,13 +280,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-      writeProjects(filtered)
+      await writeProjects(filtered)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -198,16 +296,11 @@ export async function DELETE(request: NextRequest) {
     console.error('DELETE /api/projects error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Proje silinemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
   }
 }
-
-
-
-
-

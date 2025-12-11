@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { adminAuth } from '../admin/middleware'
+import { supabase, SkillRow } from '@/lib/supabase'
 
 const SKILLS_FILE = join(process.cwd(), 'data', 'skills.json')
 
-function readSkills() {
+// Fallback: File system functions
+function readSkillsFromFile() {
   try {
     if (!existsSync(SKILLS_FILE)) {
       return []
@@ -17,18 +19,79 @@ function readSkills() {
   }
 }
 
-function writeSkills(data: any[]) {
-  const dir = join(process.cwd(), 'data')
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true })
+function writeSkillsToFile(data: any[]) {
+  try {
+    const dir = join(process.cwd(), 'data')
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true })
+    }
+    writeFileSync(SKILLS_FILE, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch (error) {
+    console.error('File write error:', error)
+    return false
   }
-  writeFileSync(SKILLS_FILE, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// Database functions
+async function readSkills() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('skills')
+        .select('*')
+        .order('id', { ascending: true })
+
+      if (error) {
+        console.error('Supabase error:', error)
+        return readSkillsFromFile()
+      }
+
+      return (data || []).map((row: SkillRow) => ({
+        id: row.id,
+        name: row.name,
+        level: row.level,
+      }))
+    } catch (error) {
+      console.error('Error reading from Supabase:', error)
+      return readSkillsFromFile()
+    }
+  }
+
+  return readSkillsFromFile()
+}
+
+async function writeSkills(skills: any[]) {
+  if (supabase) {
+    try {
+      const rows: SkillRow[] = skills.map(skill => ({
+        id: skill.id,
+        name: skill.name,
+        level: Math.max(0, Math.min(100, parseInt(String(skill.level)) || 0)),
+      }))
+
+      await supabase.from('skills').delete().neq('id', 0)
+      const { error } = await supabase.from('skills').insert(rows)
+
+      if (error) {
+        console.error('Supabase write error:', error)
+        throw error
+      }
+
+      return true
+    } catch (error) {
+      console.error('Error writing to Supabase:', error)
+      throw error
+    }
+  }
+
+  return writeSkillsToFile(skills)
 }
 
 // GET - Tüm yetkinlikleri getir
 export async function GET() {
   try {
-    const skills = readSkills()
+    const skills = await readSkills()
     return NextResponse.json(skills)
   } catch (error) {
     return NextResponse.json(
@@ -46,7 +109,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const skills = readSkills()
+    const skills = await readSkills()
 
     // Yeni ID oluştur
     const newId = skills.length > 0
@@ -60,15 +123,17 @@ export async function POST(request: NextRequest) {
     }
 
     skills.push(newSkill)
-    
+
     try {
-      writeSkills(skills)
+      await writeSkills(skills)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı. Lütfen Supabase yapılandırmasını kontrol edin.'
+            : 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -79,9 +144,9 @@ export async function POST(request: NextRequest) {
     console.error('POST /api/skills error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Yetkinlik eklenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -96,7 +161,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const skills = readSkills()
+    const skills = await readSkills()
 
     const index = skills.findIndex((s: any) => s.id === body.id)
     if (index === -1) {
@@ -113,13 +178,15 @@ export async function PUT(request: NextRequest) {
     }
 
     try {
-      writeSkills(skills)
+      await writeSkills(skills)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: supabase
+            ? 'Veritabanına yazılamadı.'
+            : 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -129,9 +196,9 @@ export async function PUT(request: NextRequest) {
     console.error('PUT /api/skills error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Yetkinlik güncellenemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
@@ -148,7 +215,25 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = parseInt(searchParams.get('id') || '0')
 
-    const skills = readSkills()
+    if (supabase) {
+      const { error } = await supabase
+        .from('skills')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Supabase delete error:', error)
+        return NextResponse.json(
+          { error: 'Yetkinlik silinemedi' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({ success: true })
+    }
+
+    // Fallback: File system
+    const skills = await readSkills()
     const filtered = skills.filter((s: any) => s.id !== id)
 
     if (skills.length === filtered.length) {
@@ -159,13 +244,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     try {
-      writeSkills(filtered)
+      await writeSkills(filtered)
     } catch (writeError) {
-      console.error('File write error:', writeError)
+      console.error('Write error:', writeError)
       return NextResponse.json(
-        { 
-          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
-          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        {
+          error: 'Dosya yazılamadı. Lütfen Supabase veritabanı kurulumunu yapın.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined,
         },
         { status: 500 }
       )
@@ -175,13 +260,11 @@ export async function DELETE(request: NextRequest) {
     console.error('DELETE /api/skills error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Yetkinlik silinemedi'
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     )
   }
 }
-
-
