@@ -3,6 +3,7 @@
 interface ApiError {
   message: string
   status?: number
+  details?: string
 }
 
 class ApiClient {
