@@ -45,3 +45,29 @@ playwright-report/
 test-results/
 lighthouse-report.html
 
+# documentation and guides (do not push to git)
+*_REHBERI.md
+*_REHBER*.md
+*_COZUM*.md
+*_SETUP*.md
+*_DOMAIN*.md
+*_DNS*.md
+*_SSL*.md
+*_ENV*.md
+*_TROUBLESHOOTING*.md
+*_FIYATLANDIRMA*.md
+CONSOLE*.md
+BROWSER*.md
+TEST_REHBERI.md
+README_GUIDE*.md
+
+# security sensitive files
+*.pem
+*.key
+*.crt
+secrets/
+.env
+.env.local
+.env.production
+.env.development
+
