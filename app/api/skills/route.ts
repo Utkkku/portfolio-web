@@ -60,12 +60,29 @@ export async function POST(request: NextRequest) {
     }
 
     skills.push(newSkill)
-    writeSkills(skills)
+    
+    try {
+      writeSkills(skills)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(newSkill, { status: 201 })
   } catch (error) {
+    console.error('POST /api/skills error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Yetkinlik eklenemedi'
     return NextResponse.json(
-      { error: 'Yetkinlik eklenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -95,11 +112,27 @@ export async function PUT(request: NextRequest) {
       level: Math.max(0, Math.min(100, parseInt(body.level) || 0)),
     }
 
-    writeSkills(skills)
+    try {
+      writeSkills(skills)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(skills[index])
   } catch (error) {
+    console.error('PUT /api/skills error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Yetkinlik güncellenemedi'
     return NextResponse.json(
-      { error: 'Yetkinlik güncellenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -125,11 +158,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    writeSkills(filtered)
+    try {
+      writeSkills(filtered)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('DELETE /api/skills error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Yetkinlik silinemedi'
     return NextResponse.json(
-      { error: 'Yetkinlik silinemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }

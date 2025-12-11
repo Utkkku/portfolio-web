@@ -46,6 +46,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
+    
+    // Validation
+    if (!body.name || !body.issuer || !body.date) {
+      return NextResponse.json(
+        { error: 'Name, issuer ve date alanları zorunludur' },
+        { status: 400 }
+      )
+    }
+    
     const certificates = readCertificates()
 
     // Yeni ID oluştur
@@ -58,17 +67,35 @@ export async function POST(request: NextRequest) {
       name: body.name,
       issuer: body.issuer,
       date: body.date,
-      verifyUrl: body.verifyUrl,
+      verifyUrl: body.verifyUrl || '',
       image: body.image || '/certificates/placeholder.jpg',
     }
 
     certificates.push(newCertificate)
-    writeCertificates(certificates)
+    
+    try {
+      writeCertificates(certificates)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      // Netlify'da file system write sorunları olabilir
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(newCertificate, { status: 201 })
   } catch (error) {
+    console.error('POST /api/certificates error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Sertifika eklenemedi'
     return NextResponse.json(
-      { error: 'Sertifika eklenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -101,11 +128,27 @@ export async function PUT(request: NextRequest) {
       image: body.image || certificates[index].image,
     }
 
-    writeCertificates(certificates)
+    try {
+      writeCertificates(certificates)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(certificates[index])
   } catch (error) {
+    console.error('PUT /api/certificates error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Sertifika güncellenemedi'
     return NextResponse.json(
-      { error: 'Sertifika güncellenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -131,11 +174,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    writeCertificates(filtered)
+    try {
+      writeCertificates(filtered)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('DELETE /api/certificates error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Sertifika silinemedi'
     return NextResponse.json(
-      { error: 'Sertifika silinemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }

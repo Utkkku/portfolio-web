@@ -90,9 +90,11 @@ export default function CertificateManagement() {
       
       await fetchCertificates()
       resetForm()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Bir hata oluştu'
-      alert('Hata: ' + message)
+    } catch (error: any) {
+      console.error('Certificate save error:', error)
+      const message = error?.message || error?.error || 'Bir hata oluştu'
+      const details = error?.details || ''
+      alert(`Hata: ${message}${details ? '\n\nDetay: ' + details : ''}`)
     }
   }
 

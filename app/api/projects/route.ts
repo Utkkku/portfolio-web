@@ -46,6 +46,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
+    
+    // Validation
+    if (!body.title || !body.description) {
+      return NextResponse.json(
+        { error: 'Title ve description alanları zorunludur' },
+        { status: 400 }
+      )
+    }
+    
     const projects = readProjects()
 
     // Yeni ID oluştur
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
       description: body.description,
       technologies: Array.isArray(body.technologies)
         ? body.technologies
-        : body.technologies.split(',').map((t: string) => t.trim()).filter(Boolean),
+        : (body.technologies || '').split(',').map((t: string) => t.trim()).filter(Boolean),
       image: body.image || '💼',
       link: body.link || '#',
       github: body.github || '',
@@ -67,12 +76,29 @@ export async function POST(request: NextRequest) {
     }
 
     projects.push(newProject)
-    writeProjects(projects)
+    
+    try {
+      writeProjects(projects)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz. Lütfen database kullanın veya Netlify desteğine başvurun.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(newProject, { status: 201 })
   } catch (error) {
+    console.error('POST /api/projects error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Proje eklenemedi'
     return NextResponse.json(
-      { error: 'Proje eklenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -109,11 +135,27 @@ export async function PUT(request: NextRequest) {
       featured: body.featured === true || body.featured === 'true',
     }
 
-    writeProjects(projects)
+    try {
+      writeProjects(projects)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json(projects[index])
   } catch (error) {
+    console.error('PUT /api/projects error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Proje güncellenemedi'
     return NextResponse.json(
-      { error: 'Proje güncellenemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
@@ -139,11 +181,27 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    writeProjects(filtered)
+    try {
+      writeProjects(filtered)
+    } catch (writeError) {
+      console.error('File write error:', writeError)
+      return NextResponse.json(
+        { 
+          error: 'Dosya yazılamadı. Netlify serverless functions dosya sistemine yazamaz.',
+          details: process.env.NODE_ENV === 'development' ? String(writeError) : undefined
+        },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('DELETE /api/projects error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Proje silinemedi'
     return NextResponse.json(
-      { error: 'Proje silinemedi' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
       { status: 500 }
     )
   }
