@@ -14,7 +14,16 @@ export async function POST(request: NextRequest) {
 
     if (verifyPassword(password)) {
       // Generate a simple token (in production, use JWT)
-      const token = process.env.ADMIN_TOKEN || 'admin-token-123'
+      const token = process.env.ADMIN_TOKEN
+      
+      if (!token) {
+        console.error('ADMIN_TOKEN environment variable is not set!')
+        return NextResponse.json(
+          { error: 'Sunucu yapılandırma hatası' },
+          { status: 500 }
+        )
+      }
+      
       return NextResponse.json({ token, success: true })
     } else {
       return NextResponse.json(
@@ -29,6 +38,8 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+
 
 
 
