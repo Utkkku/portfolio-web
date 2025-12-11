@@ -6,12 +6,15 @@ export async function GET(request: NextRequest) {
   const debugToken = request.nextUrl.searchParams.get('token')
   const allowedToken = process.env.DEBUG_TOKEN || 'debug-only-local'
   
-  // Production'da bu endpoint'i gizli tut
-  if (process.env.NODE_ENV === 'production' && debugToken !== allowedToken) {
-    return NextResponse.json(
-      { error: 'Not found' },
-      { status: 404 }
-    )
+  // Production'da bu endpoint'i tamamen gizli tut
+  if (process.env.NODE_ENV === 'production') {
+    // Production'da sadece özel token ile erişilebilir
+    if (!debugToken || debugToken !== allowedToken) {
+      return NextResponse.json(
+        { error: 'Not found' },
+        { status: 404 }
+      )
+    }
   }
 
   return NextResponse.json({

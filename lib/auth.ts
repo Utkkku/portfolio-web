@@ -8,11 +8,6 @@ export function verifyPassword(password: string): boolean {
     return false
   }
   
-  // Debug: Production'da console.log kaldırılmalı
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Admin password check - length:', adminPassword.length, 'provided length:', password.length)
-  }
-  
   return password === adminPassword
 }
 

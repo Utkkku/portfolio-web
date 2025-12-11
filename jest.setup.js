@@ -1,6 +1,10 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+// Note: Next.js API route tests require special setup
+// For now, API route tests are skipped in Jest
+// Use E2E tests (Playwright) for full API route testing
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
