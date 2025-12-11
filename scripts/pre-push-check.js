@@ -18,7 +18,7 @@ const GITIGNORE_PATTERNS = [
   /REHBERI/i,
   /COZUM/i,
   /TROUBLESHOOT/i,
-  /SETUP/i,
+  /_SETUP/i,  // Only patterns like NETLIFY_SETUP.md, not jest.setup.js
   /DOMAIN/i,
   /DNS/i,
   /SSL/i,
@@ -33,6 +33,12 @@ const GITIGNORE_PATTERNS = [
   /\.log$/,
 ];
 
+// Files that should NOT be removed even if they match patterns
+const EXCLUDED_FILES = [
+  'jest.setup.js',
+  'jest.config.js',
+];
+
 function getTrackedFiles() {
   try {
     const output = execSync('git ls-files', { encoding: 'utf-8' });
@@ -44,6 +50,10 @@ function getTrackedFiles() {
 }
 
 function shouldIgnoreFile(filePath) {
+  // Don't remove excluded files
+  if (EXCLUDED_FILES.some(excluded => filePath.includes(excluded))) {
+    return false;
+  }
   return GITIGNORE_PATTERNS.some(pattern => pattern.test(filePath));
 }
 
